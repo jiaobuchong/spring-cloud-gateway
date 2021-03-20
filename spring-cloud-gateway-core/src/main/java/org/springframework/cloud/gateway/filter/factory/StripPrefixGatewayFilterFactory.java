@@ -78,6 +78,7 @@ public class StripPrefixGatewayFilterFactory
 
 			@Override
 			public String toString() {
+				// 这里将 filter 生成一个 toString 的方法
 				return filterToStringCreator(StripPrefixGatewayFilterFactory.this)
 						.append("parts", config.getParts()).toString();
 			}
