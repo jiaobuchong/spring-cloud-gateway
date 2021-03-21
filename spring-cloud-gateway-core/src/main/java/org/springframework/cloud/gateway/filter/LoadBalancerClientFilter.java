@@ -51,6 +51,7 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 
 	private LoadBalancerProperties properties;
 
+//	构造函数传入负载均衡客户端，依赖中添加 Spring Cloud Netflix Ribbon 即可 注入 该 Bean
 	public LoadBalancerClientFilter(LoadBalancerClient loadBalancer,
 			LoadBalancerProperties properties) {
 		this.loadBalancer = loadBalancer;
@@ -62,6 +63,8 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 		return LOAD_BALANCER_CLIENT_FILTER_ORDER;
 	}
 
+//	LoadBalancerClientFilter 在交换属性 GATEWAY_ REQUEST_ URL_ ATTR 中查找URL， 如果URL有一个 lb 前缀 ，
+//	即 lb:// myservice，将使用 LoadBalancerClient 将名称 解析为实际的主机和端口，如示例中的 myservice
 	@Override
 	@SuppressWarnings("Duplicates")
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -72,12 +75,14 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 			return chain.filter(exchange);
 		}
 		// preserve the original url
+		// 保留原始url
 		addOriginalRequestUrl(exchange, url);
 
 		if (log.isTraceEnabled()) {
 			log.trace("LoadBalancerClientFilter url before: " + url);
 		}
 
+		// 负载均衡到具体服务实例
 		final ServiceInstance instance = choose(exchange);
 
 		if (instance == null) {
@@ -89,11 +94,13 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 
 		// if the `lb:<scheme>` mechanism was used, use `<scheme>` as the default,
 		// if the loadbalancer doesn't provide one.
+		// 如果没有提供前缀的话，则会使用默认的'< scheme>'，否则使用' lb:< scheme>' 机制。
 		String overrideScheme = instance.isSecure() ? "https" : "http";
 		if (schemePrefix != null) {
 			overrideScheme = url.getScheme();
 		}
 
+		//根据获取的服务实例信息，重新组装请求的 url
 		URI requestUrl = loadBalancer.reconstructURI(
 				new DelegatingServiceInstance(instance, overrideScheme), uri);
 
@@ -101,6 +108,7 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 			log.trace("LoadBalancerClientFilter url chosen: " + requestUrl);
 		}
 
+//		最后，添加请求的URL到GATEWAY_ REQUEST_ URL_ ATTR，并提交到过滤器链中继续执行
 		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, requestUrl);
 		return chain.filter(exchange);
 	}

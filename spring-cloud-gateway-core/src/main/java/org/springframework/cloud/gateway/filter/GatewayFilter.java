@@ -22,6 +22,9 @@ import org.springframework.cloud.gateway.support.ShortcutConfigurable;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * Filter 最终是通过 filter chain 来形成链式调用的，
+ * 每个 filter 处理完 pre filter 逻辑后委派给 filter chain，
+ * filter chain 再委派给下一下 filter。
  * Contract for interception-style, chained processing of Web requests that may be used to
  * implement cross-cutting, application-agnostic requirements such as security, timeouts,
  * and others. Specific to a Gateway

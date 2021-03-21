@@ -33,9 +33,11 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 @Validated
 public class FilterDefinition {
 
+//	Filter 的名称，符合特定的命名规范，为对应的工厂名前缀
 	@NotNull
 	private String name;
 
+//	一个键值对参数用于构造 Filter 对象
 	private Map<String, String> args = new LinkedHashMap<>();
 
 	public FilterDefinition() {
@@ -51,6 +53,21 @@ public class FilterDefinition {
 
 		String[] args = tokenizeToStringArray(text.substring(eqIdx + 1), ",");
 
+		/**
+		 *         - id: lb_route
+		 *           predicates:
+		 *             - Path=/lb/**
+		 *           filters:
+		 *             - AddRequestHeader=X-Request-red, blue
+		 *
+		 * 这里生成的 map 会映射到 Config 类上，比如：AddRequestHeaderGatewayFilterFactory，
+		 * args 里的参数名 _genkey_0 映射到 Config 的 name 上
+		 * args 里的参数名 _genkey_1 映射到 Config 的 value 上
+		 *
+		 * config 对象里的字段：
+		 * name=X-Request-red
+		 * value=blue
+		 */
 		for (int i = 0; i < args.length; i++) {
 			this.args.put(NameUtils.generateName(i), args[i]);
 		}

@@ -31,6 +31,7 @@ public class CompositeRouteLocator implements RouteLocator {
 
 	@Override
 	public Flux<Route> getRoutes() {
+		// 将所有 RouteLocator 里 routes 转换成 Route
 		return this.delegates.flatMap(RouteLocator::getRoutes);
 	}
 

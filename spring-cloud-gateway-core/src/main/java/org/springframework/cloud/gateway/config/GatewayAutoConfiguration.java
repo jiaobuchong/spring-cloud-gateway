@@ -169,6 +169,7 @@ public class GatewayAutoConfiguration {
 		return new RouteLocatorBuilder(context);
 	}
 
+	// 解析 application.yml 文件里的路由配置信息
 	@Bean
 	@ConditionalOnMissingBean
 	public PropertiesRouteDefinitionLocator propertiesRouteDefinitionLocator(
@@ -182,6 +183,9 @@ public class GatewayAutoConfiguration {
 		return new InMemoryRouteDefinitionRepository();
 	}
 
+//	使用上面创建的 RouteDefinitionLocator 的 Bean 对象们，
+//	创建一个类型为 org.springframework.cloud.gateway.route.CompositeRouteDefinitionLocator 的 Bean 对象
+//	@Primary 注解，用于下面注入类型为 RouteDefinitionLocator 的 Bean 对象时，使用该对象
 	@Bean
 	@Primary
 	public RouteDefinitionLocator routeDefinitionLocator(
@@ -190,6 +194,9 @@ public class GatewayAutoConfiguration {
 				Flux.fromIterable(routeDefinitionLocators));
 	}
 
+//	此处的 routeDefinitionLocator 参数，
+//	使用了 @Primary 注解的 CompositeRouteDefinitionLocator 的 Bean 对象。
+	// 此处的 Route 才是 spg 使用的 route
 	@Bean
 	public RouteLocator routeDefinitionRouteLocator(GatewayProperties properties,
 			List<GatewayFilterFactory> gatewayFilters,
@@ -200,11 +207,17 @@ public class GatewayAutoConfiguration {
 				gatewayFilters, properties, conversionService);
 	}
 
+//	创建一个类型为 org.springframework.cloud.gateway.route.CachingRouteLocator 的 Bean 对象。
+//	该 Bean 对象内嵌 org.springframework.cloud.gateway.route.CompositeRouteLocator 对象
+	// 这里会引用上面的 RouteLocator bean
+	// spg 最终会使用这个 RouteLocator
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean(name = "cachedCompositeRouteLocator")
 	// TODO: property to disable composite?
 	public RouteLocator cachedCompositeRouteLocator(List<RouteLocator> routeLocators) {
+		// CachingRouteLocator
+		// CompositeRouteLocator 只是一个代理对象
 		return new CachingRouteLocator(
 				new CompositeRouteLocator(Flux.fromIterable(routeLocators)));
 	}
@@ -225,6 +238,7 @@ public class GatewayAutoConfiguration {
 		return new GlobalCorsProperties();
 	}
 
+//	用于查找匹配到 Route ，并进行处理
 	@Bean
 	public RoutePredicateHandlerMapping routePredicateHandlerMapping(
 			FilteringWebHandler webHandler, RouteLocator routeLocator,

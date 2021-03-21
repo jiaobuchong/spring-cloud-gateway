@@ -44,6 +44,7 @@ public class Route implements Ordered {
 
 	private final URI uri;
 
+//	用于多个 Route 之间的排序，数值越小排序越靠前，匹配优先级越高
 	private final int order;
 
 	private final AsyncPredicate<ServerWebExchange> predicate;

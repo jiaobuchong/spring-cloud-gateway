@@ -40,6 +40,7 @@ public interface ShortcutConfigurable {
 			Map<String, String> args) {
 		// RoutePredicateFactory has name hints and this has a fake key name
 		// replace with the matching key hint
+		// 在 yml 文件中配置的 filter 指定的 key 是默认生成的 _genkey_0
 		if (key.startsWith(NameUtils.GENERATED_NAME_PREFIX)
 				&& !argHints.shortcutFieldOrder().isEmpty() && entryIdx < args.size()
 				&& entryIdx < argHints.shortcutFieldOrder().size()) {

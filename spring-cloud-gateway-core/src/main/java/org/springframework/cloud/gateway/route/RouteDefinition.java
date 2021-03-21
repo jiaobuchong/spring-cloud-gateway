@@ -33,6 +33,7 @@ import org.springframework.validation.annotation.Validated;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
+ * 对 Route 信息进行定义，最终会被 RouteLocator 解析成 Route
  * @author Spencer Gibb
  */
 @Validated

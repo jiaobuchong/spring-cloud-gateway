@@ -22,6 +22,7 @@ import org.springframework.core.Ordered;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * OrderedGatewayFilter实现类是目标过滤器的包装类，它的主要目的是为了将目标过滤器包装成可排序的对象类型
  * @author Spencer Gibb
  */
 public class OrderedGatewayFilter implements GatewayFilter, Ordered {

@@ -30,6 +30,7 @@ import org.springframework.web.server.ServerWebExchange;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.isAlreadyRouted;
 
+// ForwardRoutingFilter 转发路由过滤器
 public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(ForwardRoutingFilter.class);
@@ -56,12 +57,15 @@ public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 	public int getOrder() {
 		return Ordered.LOWEST_PRECEDENCE;
 	}
-
+//	过滤器执行时，首先获取请求地址的url前缀，然后判断该请求是否已被路由处理或者URL的前缀不是forward，
+//	则继续执行过滤器链；
+//	否则设置路由处理状态并交由DispatcherHandler进行处理。
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		URI requestUrl = exchange.getRequiredAttribute(GATEWAY_REQUEST_URL_ATTR);
-
+		//获取请求URI的请求结构
 		String scheme = requestUrl.getScheme();
+		//该路由已经被处理或者URI格式不是forward则继续其它过滤器
 		if (isAlreadyRouted(exchange) || !"forward".equals(scheme)) {
 			return chain.filter(exchange);
 		}
@@ -71,7 +75,7 @@ public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 		if (log.isTraceEnabled()) {
 			log.trace("Forwarding to URI: " + requestUrl);
 		}
-
+		// 使用dispatcherHandler进行处理
 		return this.getDispatcherHandler().handle(exchange);
 	}
 

@@ -125,6 +125,8 @@ public class FilteringWebHandler implements WebHandler {
 
 	}
 
+//	在网关过滤器链 GatewayFilterChain 中会使用 GatewayFilter 过滤请求，
+//	GatewayFilterAdapter的作用就是将全局过滤器 GlobalFilter 适配成 网关过滤器 GatewayFilter
 	private static class GatewayFilterAdapter implements GatewayFilter {
 
 		private final GlobalFilter delegate;
