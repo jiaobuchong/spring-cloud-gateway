@@ -111,6 +111,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 				|| (!"http".equals(scheme) && !"https".equals(scheme))) {
 			return chain.filter(exchange);
 		}
+		// 设置已经路由
 		setAlreadyRouted(exchange);
 
 		/**
@@ -137,6 +138,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 				.getAttributeOrDefault(PRESERVE_HOST_HEADER_ATTRIBUTE, false);
 
 		/**
+		 * 这里开始请求
 		 * httpClient 这次采用httpclient 去代理访问要去代理的地址，相当于网关去
 		 * 帮你请求了一次
 		 */
