@@ -27,6 +27,7 @@ import org.springframework.web.server.ServerWebExchange;
  */
 public class OrderedGatewayFilter implements GatewayFilter, Ordered {
 
+	// 代理模式
 	private final GatewayFilter delegate;
 
 	private final int order;

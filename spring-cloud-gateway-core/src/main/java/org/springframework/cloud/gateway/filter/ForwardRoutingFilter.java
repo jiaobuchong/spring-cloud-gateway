@@ -76,6 +76,7 @@ public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 			log.trace("Forwarding to URI: " + requestUrl);
 		}
 		// 使用dispatcherHandler进行处理
+		// 转发到当前网关实例的本地接口
 		return this.getDispatcherHandler().handle(exchange);
 	}
 

@@ -38,6 +38,7 @@ import org.springframework.web.server.WebHandler;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 /**
+ * 在 GatewayAutoConfiguration 里进行初始化的
  * WebHandler that delegates to a chain of {@link GlobalFilter} instances and
  * {@link GatewayFilterFactory} instances then to the target {@link WebHandler}.
  *
@@ -57,9 +58,11 @@ public class FilteringWebHandler implements WebHandler {
 
 	private static List<GatewayFilter> loadFilters(List<GlobalFilter> filters) {
 		return filters.stream().map(filter -> {
+			// 将 GlobalFilter 适配成 GatewayFilterAdapter GatewayFilter
 			GatewayFilterAdapter gatewayFilter = new GatewayFilterAdapter(filter);
 			if (filter instanceof Ordered) {
 				int order = ((Ordered) filter).getOrder();
+				// 包装成可排序的 atewayFilter
 				return new OrderedGatewayFilter(gatewayFilter, order);
 			}
 			return gatewayFilter;
@@ -73,12 +76,16 @@ public class FilteringWebHandler implements WebHandler {
 
 	@Override
 	public Mono<Void> handle(ServerWebExchange exchange) {
+		// http请求的时候会调用到这个方法体里
+		// Route 是对应这个请求的路由信息
 		Route route = exchange.getRequiredAttribute(GATEWAY_ROUTE_ATTR);
+		// 获取这个路由下配置的 filter 列表
 		List<GatewayFilter> gatewayFilters = route.getFilters();
 
 		List<GatewayFilter> combined = new ArrayList<>(this.globalFilters);
 		combined.addAll(gatewayFilters);
 		// TODO: needed or cached?
+		// 根据order排序
 		AnnotationAwareOrderComparator.sort(combined);
 
 		if (logger.isDebugEnabled()) {
@@ -108,6 +115,7 @@ public class FilteringWebHandler implements WebHandler {
 			return filters;
 		}
 
+		// 具体的 Filter 执行完会调用这个方法继续执行下一个 filter
 		@Override
 		public Mono<Void> filter(ServerWebExchange exchange) {
 			return Mono.defer(() -> {
@@ -129,6 +137,7 @@ public class FilteringWebHandler implements WebHandler {
 //	GatewayFilterAdapter的作用就是将全局过滤器 GlobalFilter 适配成 网关过滤器 GatewayFilter
 	private static class GatewayFilterAdapter implements GatewayFilter {
 
+		// 代理
 		private final GlobalFilter delegate;
 
 		GatewayFilterAdapter(GlobalFilter delegate) {

@@ -39,9 +39,11 @@ public class AddRequestHeaderGatewayFilterFactory
 			public Mono<Void> filter(ServerWebExchange exchange,
 					GatewayFilterChain chain) {
 				String value = ServerWebExchangeUtils.expand(exchange, config.getValue());
+				// 创建新的 ServerHttpRequest
 				ServerHttpRequest request = exchange.getRequest().mutate()
 						.header(config.getName(), value).build();
 
+				// 创建新的 ServerWebExchange，提交过滤器链继续过滤
 				return chain.filter(exchange.mutate().request(request).build());
 			}
 
