@@ -81,7 +81,7 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 					NettyDataBufferFactory factory = (NettyDataBufferFactory) response
 							.bufferFactory();
 
-					// TODO: needed?
+					// TODO: needed? 对响应结果进一个解析，获取到的数据是一个NettyDataBuffer
 					final Flux<NettyDataBuffer> body = connection
 							.inbound()
 							.receive()

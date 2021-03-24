@@ -56,6 +56,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.i
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 /**
+ * 低优先级的一个 filter
  * @author Spencer Gibb
  * @author Biju Kunjummen
  */
@@ -97,18 +98,36 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		URI requestUrl = exchange.getRequiredAttribute(GATEWAY_REQUEST_URL_ATTR);
 
+		/**
+		 * 获取访问的url地址
+		 */
 		String scheme = requestUrl.getScheme();
+
+		/**
+		 * 判断这次请求是否被处理过，请求协议是否是http/https
+		 * 如果满足则不处理
+		 */
 		if (isAlreadyRouted(exchange)
 				|| (!"http".equals(scheme) && !"https".equals(scheme))) {
 			return chain.filter(exchange);
 		}
 		setAlreadyRouted(exchange);
 
+		/**
+		 * 获取ServerHttpRequest，相当于HttpServletRequest请求，在gateway
+		 * 中使用的是webflux 做的web服务，所有处理有点变化
+		 */
 		ServerHttpRequest request = exchange.getRequest();
 
+		/**
+		 * 获取 请求方式
+		 */
 		final HttpMethod method = HttpMethod.valueOf(request.getMethodValue());
 		final String url = requestUrl.toASCIIString();
 
+		/**
+		 * 获取 HttpHeaders
+		 */
 		HttpHeaders filtered = filterRequest(getHeadersFilters(), exchange);
 
 		final DefaultHttpHeaders httpHeaders = new DefaultHttpHeaders();
@@ -117,10 +136,18 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 		boolean preserveHost = exchange
 				.getAttributeOrDefault(PRESERVE_HOST_HEADER_ATTRIBUTE, false);
 
+		/**
+		 * httpClient 这次采用httpclient 去代理访问要去代理的地址，相当于网关去
+		 * 帮你请求了一次
+		 */
 		Flux<HttpClientResponse> responseFlux = this.httpClient.headers(headers -> {
 			headers.add(httpHeaders);
 			// Will either be set below, or later by Netty
 			headers.remove(HttpHeaders.HOST);
+			/**
+			 * 判断请求主机是否一致，一起是访问地址和路由地址是否是一个
+			 * ip 不是则需要替换
+			 */
 			if (preserveHost) {
 				String host = request.getHeaders().getFirst(HttpHeaders.HOST);
 				headers.add(HttpHeaders.HOST, host);
@@ -142,6 +169,9 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 			exchange.getAttributes().put(CLIENT_RESPONSE_ATTR, res);
 			exchange.getAttributes().put(CLIENT_RESPONSE_CONN_ATTR, connection);
 
+			/**
+			 * 异步获取 httpClient 访问的响应结果，下面就是对响应结果的封装
+			 */
 			ServerHttpResponse response = exchange.getResponse();
 			// put headers and status so filters can modify the response
 			HttpHeaders headers = new HttpHeaders();
