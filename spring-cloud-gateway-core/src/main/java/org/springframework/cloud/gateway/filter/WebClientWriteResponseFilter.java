@@ -61,8 +61,10 @@ public class WebClientWriteResponseFilter implements GlobalFilter, Ordered {
 
 					return response
 							.writeWith(
+									// 这里返回一个 Flux<DataBuffer> 发布者
 									clientResponse.body(BodyExtractors.toDataBuffers()))
 							// .log("webClient response")
+							// 这个代码是什么意思
 							.doOnCancel(() -> cleanup(exchange));
 				}));
 	}

@@ -91,6 +91,7 @@ public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 		boolean preserveHost = exchange
 				.getAttributeOrDefault(PRESERVE_HOST_HEADER_ATTRIBUTE, false);
 
+		// 设置请求url和参数
 		RequestBodySpec bodySpec = this.webClient.method(method).uri(requestUrl)
 				.headers(httpHeaders -> {
 					httpHeaders.addAll(filteredHeaders);
@@ -108,9 +109,11 @@ public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 			headersSpec = bodySpec;
 		}
 
+		// exchange 获取响应主体
 		return headersSpec.exchange()
 				// .log("webClient route")
 				.flatMap(res -> {
+					// 处理响应结果
 					ServerHttpResponse response = exchange.getResponse();
 					response.getHeaders().putAll(res.headers().asHttpHeaders());
 					response.setStatusCode(res.statusCode());
