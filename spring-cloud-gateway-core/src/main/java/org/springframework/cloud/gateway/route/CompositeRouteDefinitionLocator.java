@@ -48,6 +48,7 @@ public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 		this.idGenerator = idGenerator;
 	}
 
+	// 组合多种 RouteDefinitionLocator 实现，为 RouteDefinitionLocator 提供统一入口
 	@Override
 	public Flux<RouteDefinition> getRouteDefinitions() {
 		return this.delegates.flatMap(RouteDefinitionLocator::getRouteDefinitions)
