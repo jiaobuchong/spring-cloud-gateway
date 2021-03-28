@@ -33,6 +33,7 @@ public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 	private static final Log log = LogFactory
 			.getLog(CompositeRouteDefinitionLocator.class);
 
+	// 代理所有的 RouteDefinition 们
 	private final Flux<RouteDefinitionLocator> delegates;
 
 	private final IdGenerator idGenerator;
@@ -51,6 +52,7 @@ public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 	public Flux<RouteDefinition> getRouteDefinitions() {
 		return this.delegates.flatMap(RouteDefinitionLocator::getRouteDefinitions)
 				.flatMap(routeDefinition -> Mono.justOrEmpty(routeDefinition.getId())
+						// 如果 route 没有指定id 会生成一个 id
 						.defaultIfEmpty(idGenerator.generateId().toString())
 						.publishOn(Schedulers.elastic()).map(id -> {
 							if (routeDefinition.getId() == null) {

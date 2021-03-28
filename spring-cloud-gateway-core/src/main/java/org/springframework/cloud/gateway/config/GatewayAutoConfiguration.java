@@ -177,6 +177,7 @@ public class GatewayAutoConfiguration {
 		return new PropertiesRouteDefinitionLocator(properties);
 	}
 
+	// 自定义的路由信息
 	@Bean
 	@ConditionalOnMissingBean(RouteDefinitionRepository.class)
 	public InMemoryRouteDefinitionRepository inMemoryRouteDefinitionRepository() {
