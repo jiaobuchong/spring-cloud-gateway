@@ -51,6 +51,7 @@ public class AfterRoutePredicateFactory
 			@Override
 			public boolean test(ServerWebExchange serverWebExchange) {
 				final ZonedDateTime now = ZonedDateTime.now();
+				// 判断当前时间是否是在 Config 指定的 datetime 之后
 				return now.isAfter(config.getDatetime());
 			}
 

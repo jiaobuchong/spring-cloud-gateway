@@ -157,6 +157,7 @@ public interface ShortcutConfigurable {
 			}
 		};
 
+		// 在枚举类里定义的抽象类
 		public abstract Map<String, Object> normalize(Map<String, String> args,
 				ShortcutConfigurable shortcutConf, SpelExpressionParser parser,
 				BeanFactory beanFactory);

@@ -52,6 +52,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * RouteLocator 接口核心实现类，用于将 RouteDefinition 转换成 Route
  * {@link RouteLocator} that loads routes from a {@link RouteDefinitionLocator}.
  *
  * @author Spencer Gibb
@@ -95,6 +96,14 @@ public class RouteDefinitionRouteLocator
 		gatewayFilterFactories.forEach(
 				factory -> this.gatewayFilterFactories.put(factory.name(), factory));
 		this.gatewayProperties = gatewayProperties;
+		/**
+		 * 疑问：该类依赖 GatewayProperties 对象，后者已经携带了 List 结构的 RouteDefinition，
+		 * 那为什么还要依赖 RouteDefinitionLocator 来提供 RouteDefinition？
+		 * 1. 这里并不会直接使用到 GatewayProperties 类中的 RouteDefinition，仅是用到其定义的 default filters，
+		 * 这会应用到每一个 Route 上。
+		 * 2. 最终传入的 RouteDefinitionLocator 实现上是 CompositeRouteDefinitionLocator 的实例，它组合了
+		 * GatewayProperties 中所定义的 routes。
+		 */
 	}
 
 	@Override
@@ -124,6 +133,7 @@ public class RouteDefinitionRouteLocator
 
 	@Override
 	public Flux<Route> getRoutes() {
+		// convertToRoute 方法将 RouteDefinition 转换成 Route
 		return this.routeDefinitionLocator.getRouteDefinitions().map(this::convertToRoute)
 				// TODO: error handling
 				.map(route -> {
@@ -140,13 +150,17 @@ public class RouteDefinitionRouteLocator
 	}
 
 	private Route convertToRoute(RouteDefinition routeDefinition) {
+		// 将 RouteDefinition 转换成 AyncPredicate
 		AsyncPredicate<ServerWebExchange> predicate = combinePredicates(routeDefinition);
+		// 将 FilterDefinition 转换成 GatewayFilter
 		List<GatewayFilter> gatewayFilters = getFilters(routeDefinition);
 
+		// 生产 Route 对象
 		return Route.async(routeDefinition).asyncPredicate(predicate)
 				.replaceFilters(gatewayFilters).build();
 	}
 
+//	根据名称获取对应的 filter factory，生成 config 对象，绑定属性，调用工厂方法产生 GatewayFilter 对象
 	@SuppressWarnings("unchecked")
 	List<GatewayFilter> loadGatewayFilters(String id,
 			List<FilterDefinition> filterDefinitions) {
@@ -200,16 +214,19 @@ public class RouteDefinitionRouteLocator
 		List<GatewayFilter> filters = new ArrayList<>();
 
 		// TODO: support option to apply defaults after route specific filters?
+		//  处理 GatewayProperties 中定义的默认的 FilterDefinition，转换成 GatewayFilter
 		if (!this.gatewayProperties.getDefaultFilters().isEmpty()) {
 			filters.addAll(loadGatewayFilters(DEFAULT_FILTERS,
 					this.gatewayProperties.getDefaultFilters()));
 		}
 
+//		将 RouteDefinition 中定义的 FilterDefinition 转换成 GatewayFilter
 		if (!routeDefinition.getFilters().isEmpty()) {
 			filters.addAll(loadGatewayFilters(routeDefinition.getId(),
 					routeDefinition.getFilters()));
 		}
 
+//		对 GatewayFilter 进行排序，排序的详细逻辑请查阅 spring 中的 Ordered 接口
 		AnnotationAwareOrderComparator.sort(filters);
 		return filters;
 	}
@@ -233,27 +250,34 @@ public class RouteDefinitionRouteLocator
 	@SuppressWarnings("unchecked")
 	private AsyncPredicate<ServerWebExchange> lookup(RouteDefinition route,
 			PredicateDefinition predicate) {
+		// 1. 根据 predicate 名称获取对应的 predicate factory
 		RoutePredicateFactory<Object> factory = this.predicates.get(predicate.getName());
 		if (factory == null) {
 			throw new IllegalArgumentException(
 					"Unable to find RoutePredicateFactory with name "
 							+ predicate.getName());
 		}
+//		2. 获取 PredicateDefinition 中的 Map 类型参数，key 是固定字符串_genkey_ + 数字拼接而成
 		Map<String, String> args = predicate.getArgs();
 		if (logger.isDebugEnabled()) {
 			logger.debug("RouteDefinition " + route.getId() + " applying " + args + " to "
 					+ predicate.getName());
 		}
 
+//		3. 对第 2 步获得的参数作进一步转换，key 为 config 类（工厂类中通过范型指定）的属性名称。
 		Map<String, Object> properties = factory.shortcutType().normalize(args, factory,
 				this.parser, this.beanFactory);
+		// 4. 创建一个 config 类对象
 		Object config = factory.newConfig();
+
+		// 5. 将第3步产生的参数绑定到 config 类对象上
 		ConfigurationUtils.bind(config, properties, factory.shortcutFieldPrefix(),
 				predicate.getName(), validator, conversionService);
 		if (this.publisher != null) {
 			this.publisher.publishEvent(
 					new PredicateArgsEvent(this, route.getId(), properties));
 		}
+		// 6. 创建 AsyncPredicate 对象
 		return factory.applyAsync(config);
 	}
 
