@@ -44,6 +44,7 @@ public class Route implements Ordered {
 
 	private final URI uri;
 
+//	属性，顺序。当请求匹配到多个路由时，使用顺序小的。
 //	用于多个 Route 之间的排序，数值越小排序越靠前，匹配优先级越高
 	private final int order;
 

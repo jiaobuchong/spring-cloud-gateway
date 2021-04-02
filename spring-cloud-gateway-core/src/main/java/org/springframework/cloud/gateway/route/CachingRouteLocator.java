@@ -28,6 +28,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 /**
+ * 缓存路由的 RouteLocator 实现类
+ * RoutePredicateHandlerMapping 调用 CachingRouteLocator 的 RouteLocator#getRoutes() 方法，获取路由
  * @author Spencer Gibb
  */
 public class CachingRouteLocator

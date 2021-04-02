@@ -19,6 +19,7 @@ package org.springframework.cloud.gateway.route;
 import reactor.core.publisher.Flux;
 
 /**
+ * RoutePredicateHandlerMapping 使用 RouteLocator 获得 Route 信息
  * @author Spencer Gibb
  */
 // TODO: rename to Routes?
