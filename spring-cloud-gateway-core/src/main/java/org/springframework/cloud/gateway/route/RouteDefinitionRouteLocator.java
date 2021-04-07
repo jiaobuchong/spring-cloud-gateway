@@ -170,6 +170,7 @@ public class RouteDefinitionRouteLocator
 	@SuppressWarnings("unchecked")
 	List<GatewayFilter> loadGatewayFilters(String id,
 			List<FilterDefinition> filterDefinitions) {
+		// 将 FilterDefinition 转换成 GatewayFilter
 		ArrayList<GatewayFilter> ordered = new ArrayList<>(filterDefinitions.size());
 		for (int i = 0; i < filterDefinitions.size(); i++) {
 			FilterDefinition definition = filterDefinitions.get(i);
