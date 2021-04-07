@@ -77,8 +77,10 @@ public class RouteDefinitionRouteLocator
 
 	private final GatewayProperties gatewayProperties;
 
+	// Spring EL 表达式解析器
 	private final SpelExpressionParser parser = new SpelExpressionParser();
 
+	// Bean 工厂
 	private BeanFactory beanFactory;
 
 	private ApplicationEventPublisher publisher;
@@ -90,8 +92,10 @@ public class RouteDefinitionRouteLocator
 			List<RoutePredicateFactory> predicates,
 			List<GatewayFilterFactory> gatewayFilterFactories,
 			GatewayProperties gatewayProperties, ConversionService conversionService) {
+		// 提供 RouteDefinition
 		this.routeDefinitionLocator = routeDefinitionLocator;
 		this.conversionService = conversionService;
+//		将 RouteDefinition.predicates 转换成 Route.predicates
 		initFactories(predicates);
 		gatewayFilterFactories.forEach(
 				factory -> this.gatewayFilterFactories.put(factory.name(), factory));
@@ -131,6 +135,7 @@ public class RouteDefinitionRouteLocator
 		});
 	}
 
+	// 获得 Route 数组
 	@Override
 	public Flux<Route> getRoutes() {
 		// convertToRoute 方法将 RouteDefinition 转换成 Route
@@ -153,6 +158,7 @@ public class RouteDefinitionRouteLocator
 		// 将 RouteDefinition 转换成 AyncPredicate
 		AsyncPredicate<ServerWebExchange> predicate = combinePredicates(routeDefinition);
 		// 将 FilterDefinition 转换成 GatewayFilter
+//		调用 #getFilters() 方法，获得 GatewayFilter 数组
 		List<GatewayFilter> gatewayFilters = getFilters(routeDefinition);
 
 		// 生产 Route 对象
@@ -231,8 +237,12 @@ public class RouteDefinitionRouteLocator
 		return filters;
 	}
 
+//	将 RouteDefinition.predicates 数组合并成一个 java.util.function.Predicate ，
+//	这样 RoutePredicateHandlerMapping 为请求匹配 Route ，
+//	只要调用一次 Predicate#test(ServerWebExchange) 方法即可
 	private AsyncPredicate<ServerWebExchange> combinePredicates(
 			RouteDefinition routeDefinition) {
+//		routeDefinition 对应每一个路由
 		List<PredicateDefinition> predicates = routeDefinition.getPredicates();
 		AsyncPredicate<ServerWebExchange> predicate = lookup(routeDefinition,
 				predicates.get(0));
@@ -241,6 +251,7 @@ public class RouteDefinitionRouteLocator
 				predicates.size())) {
 			AsyncPredicate<ServerWebExchange> found = lookup(routeDefinition,
 					andPredicate);
+			// 拼接 predicate
 			predicate = predicate.and(found);
 		}
 

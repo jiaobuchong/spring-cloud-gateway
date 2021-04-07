@@ -78,6 +78,7 @@ public interface ShortcutConfigurable {
 	 * Returns hints about the number of args and the order for shortcut parsing.
 	 * @return the list of hints
 	 */
+	// 这里返回的字段对应于 Config 类里的字段
 	default List<String> shortcutFieldOrder() {
 		return Collections.emptyList();
 	}
@@ -126,6 +127,7 @@ public interface ShortcutConfigurable {
 			}
 		},
 
+		// 最后一个变量是 Boolean 类型
 		// list is all elements except last which is a boolean flag
 		GATHER_LIST_TAIL_FLAG {
 			@Override
