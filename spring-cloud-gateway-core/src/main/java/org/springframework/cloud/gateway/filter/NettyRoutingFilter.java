@@ -132,6 +132,8 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 		HttpHeaders filtered = filterRequest(getHeadersFilters(), exchange);
 
 		final DefaultHttpHeaders httpHeaders = new DefaultHttpHeaders();
+		// 创建 Netty Request Header 对象( io.netty.handler.codec.http.DefaultHttpHeaders )，
+		// 将请求的 Header 设置给它。
 		filtered.forEach(httpHeaders::set);
 
 		boolean preserveHost = exchange
@@ -154,20 +156,25 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 				String host = request.getHeaders().getFirst(HttpHeaders.HOST);
 				headers.add(HttpHeaders.HOST, host);
 			}
+//			调用 HttpClient#request(HttpMethod, String, Function) 方法，请求后端 Http 服务
 		}).request(method).uri(url).send((req, nettyOutbound) -> {
 			if (log.isTraceEnabled()) {
 				nettyOutbound.withConnection(connection -> log.trace(
 						"outbound route: " + connection.channel().id().asShortText()
 								+ ", inbound: " + exchange.getLogPrefix()));
 			}
-			return nettyOutbound.options(NettyPipeline.SendOptions::flushOnEach).send(
+			return nettyOutbound.options(NettyPipeline.SendOptions::flushOnEach)
+					// 请求后端 http 服务
+					.send(
 					request.getBody().map(dataBuffer -> ((NettyDataBuffer) dataBuffer)
 							.getNativeBuffer()));
 		}).responseConnection((res, connection) -> {
-
+			// 请求成功
 			// Defer committing the response until all route filters have run
 			// Put client response as ServerWebExchange attribute and write
 			// response later NettyWriteResponseFilter
+			// 设置 Response 到 CLIENT_RESPONSE_ATTR
+//			续 NettyWriteResponseFilter 将 Netty Response 写回给客户端
 			exchange.getAttributes().put(CLIENT_RESPONSE_ATTR, res);
 			exchange.getAttributes().put(CLIENT_RESPONSE_CONN_ATTR, connection);
 
@@ -233,6 +240,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 									th.getMessage(), th));
 		}
 
+//		提交过滤器链继续过滤
 		return responseFlux.then(chain.filter(exchange));
 	}
 

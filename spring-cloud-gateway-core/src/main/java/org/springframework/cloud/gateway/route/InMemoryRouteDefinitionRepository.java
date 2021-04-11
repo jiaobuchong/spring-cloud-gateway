@@ -37,6 +37,10 @@ public class InMemoryRouteDefinitionRepository implements RouteDefinitionReposit
 
 	@Override
 	public Mono<Void> save(Mono<RouteDefinition> route) {
+		// Mono<Void> 这是一个异步流程
+		// flatMap 将元素转换为 Mono 或 Flux，转换操作里还可以进行异步操作
+		// flatMap 转换要求返回一个 Publisher，这个 Publisher 代表一个作用于元素的异步转换操作
+		// 而 map 仅仅同步的元素转换操作
 		return route.flatMap(r -> {
 			if (StringUtils.isEmpty(r.getId())) {
 				return Mono.error(new IllegalArgumentException("id may not be empty"));
